@@ -1,0 +1,36 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Divine Fortune Blitz Client</title>
+<style>
+
+  .c {text-align:center;}
+
+</style>
+
+<script> 
+
+</script>
+</head>
+<body>
+    
+    Hello, Divine Fortune Blitz!
+    
+<script>
+function sendGetRequest(url, params, callback){
+  let xhr = new XMLHttpRequest();
+  let urlParams = new URLSearchParams(params);
+  xhr.open('get', url + '?' + urlParams.toString());
+  xhr.onload = function(){
+    if (this.status !== 200){
+      return callback(this.status + ': ' + this.responseText);
+    }
+    else {
+      return callback(null, this.responseText);
+    }
+  };
+  xhr.send();
+}
+</script>
+</body>
+</html>
