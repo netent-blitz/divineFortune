@@ -46,13 +46,9 @@
   
 <table id="theTable">
   <tr>
-    <th class="columnName">Network</th>
-    <td class="columnValue"><input type="text" id="network" placeholder="***-api.casinomodule.com" class="w"></td>
-    <td rowspan="8" id="spinsLog" class="bordered">No spins yet...</td>
-  </tr>
-  <tr>
-    <th>Token</th>
-    <td><input type="text" id="token" placeholder="1560799081404-1040034-JDA2Q6ITFYXRJ" class="w"></td>
+    <th class="columnName">Game URL</th>
+    <td class="columnValue"><input type="text" id="gameURL" placeholder="https://***-static.casinomodule.com/games/godsoffortune_mobile_html..." class="w" onChange="javascript:parseGameURL()"></td>
+    <td rowspan="6" id="spinsLog" class="bordered">No spins yet...</td>
   </tr>
   <tr>
     <th>Play speed</th>
@@ -90,7 +86,7 @@
       <input type="button" id="resetButton" onClick="javascript:resetStats();" value="Reset stats" class="w">
     </td>
     <td>
-      <input type="button" id="startButton" onClick="javascript:startStopPlay();" value="Start play" class="w b">
+      <input type="button" id="startButton" onClick="javascript:startStopPlay();" value="Enter Game URL" class="w b" disabled="disabled">
     </td>
     <td id="statsPlace" class="bordered">Start play, to see stats</td>
   </tr>
@@ -142,6 +138,29 @@ function renderStats() {
 }
 renderStats(); // Initial render
 
+function parseGameURL() {
+  
+  globalState['playing'] = false; // Stop any play
+  
+  let gameURL;
+  try {
+    gameURL = new URL(document.getElementById('gameURL').value);
+  } catch (error){
+    return alert(error); // Default error message is verbose enough 'Check if url is correct: ' 
+  }
+  
+  globalState['token'] = gameURL.searchParams.get('sessId');
+  globalState['game'] = gameURL.searchParams.get('gameId');
+  globalState['server'] = gameURL.searchParams.get('server');
+  
+  document.getElementById('gameURL').value = "";
+  document.getElementById('gameURL').placeholder = "Ready to play!"
+  
+  document.getElementById('startButton').value = "Start play";
+  document.getElementById('startButton').disabled = false;
+  
+}
+
 function startStopPlay() {
   let startStopButton = document.getElementById('startButton');
   if (globalState['playing'] === true) { // We should stop play
@@ -174,6 +193,7 @@ function sendGetRequest(url, params, callback) {
   };
   xhr.send();
 }
+
 </script>
 </body>
 </html>
