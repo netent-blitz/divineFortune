@@ -146,20 +146,48 @@ function parseGameURL() {
   try {
     gameURL = new URL(document.getElementById('gameURL').value);
   } catch (error){
-    return alert(error); // Default error message is verbose enough 'Check if url is correct: ' 
+    
+    badGameURL();
+    alert(error); // Default error message is verbose enough 'Check if url is correct: ' 
+    return false;
   }
   
   globalState['token'] = gameURL.searchParams.get('sessId');
   globalState['game'] = gameURL.searchParams.get('gameId');
   globalState['server'] = gameURL.searchParams.get('server');
   
-  document.getElementById('gameURL').value = "";
-  document.getElementById('gameURL').placeholder = "Ready to play!"
-  
-  document.getElementById('startButton').value = "Start play";
-  document.getElementById('startButton').disabled = false;
+  if (
+      globalState['token']
+      && globalState['game']
+      && globalState['server']
+      && globalState['server'].indexOf('casinomodule.com') > -1
+  ) { // Looks like settings are good...
+      document.getElementById('gameURL').value = "";
+      document.getElementById('gameURL').placeholder = "Ready to play!"
+      
+      document.getElementById('startButton').value = "Start play";
+      document.getElementById('startButton').disabled = false;
+  }
+  else { // Something is wrong, reset controls...
+    badGameURL();
+  }
   
 }
+
+function badGameURL(){
+  // Bad game URL, reset controls.
+  globalState['token'] = null;
+  globalState['game'] = null;
+  globalState['server'] = null;
+    
+  document.getElementById('gameURL').value = "";
+  document.getElementById('gameURL').placeholder = "https://***-static.casinomodule.com/games/godsoffortune_mobile_html...";
+    
+  document.getElementById('startButton').value = "Enter Game URL";
+  document.getElementById('startButton').disabled = true;
+  
+}
+badGameURL(); // Initial reset after load.
 
 function startStopPlay() {
   let startStopButton = document.getElementById('startButton');
