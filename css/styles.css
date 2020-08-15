@@ -1,0 +1,32 @@
+.c {
+  text-align:center;
+}
+
+.w {
+  box-sizing:border-box;
+  width:100%;
+}
+
+.b {
+  font-weight:700;
+}
+
+.columnName {
+  width:15%;
+}
+
+.columnValue {
+  width:25%;
+}
+
+#theTable {
+  border:1px outset #000;
+  margin:0 auto;
+  min-width:960px;
+  width:60%;
+}
+
+.bordered {
+  border:1px inset grey;
+  padding:3px;
+}
