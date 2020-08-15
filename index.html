@@ -48,7 +48,7 @@
   <tr>
     <th class="columnName">Game URL</th>
     <td class="columnValue"><input type="text" id="gameURL" placeholder="https://***-static.casinomodule.com/games/godsoffortune_mobile_html..." class="w" onChange="javascript:parseGameURL()"></td>
-    <td rowspan="6" id="spinsLog" class="bordered">No spins yet...</td>
+    <td rowspan="7" id="spinsLog" class="bordered">No spins yet...</td>
   </tr>
   <tr>
     <th>Play speed</th>
@@ -156,12 +156,7 @@ function parseGameURL() {
   globalState['game'] = gameURL.searchParams.get('gameId');
   globalState['server'] = gameURL.searchParams.get('server');
   
-  if (
-      globalState['token']
-      && globalState['game']
-      && globalState['server']
-      && globalState['server'].indexOf('casinomodule.com') > -1
-  ) { // Looks like settings are good...
+  if (checkGameReady()) { // Looks like settings are good...
       document.getElementById('gameURL').value = "";
       document.getElementById('gameURL').placeholder = "Ready to play!"
       
@@ -189,6 +184,13 @@ function badGameURL(){
 }
 badGameURL(); // Initial reset after load.
 
+function checkGameReady(){
+  return globalState['token']
+      && globalState['game']
+      && globalState['server']
+      && globalState['server'].indexOf('casinomodule.com') > -1;
+}
+
 function startStopPlay() {
   let startStopButton = document.getElementById('startButton');
   if (globalState['playing'] === true) { // We should stop play
@@ -204,6 +206,10 @@ function startStopPlay() {
     startStopButton.value = "Stop play";
 
     globalState['stats']['lastStart'] = Date.now();
+    
+    if (checkGameReady()){
+        // OK, let's start...
+    }
 
   }
 }
