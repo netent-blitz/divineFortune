@@ -1,32 +1,174 @@
-<html lang="en">
+<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 <title>Divine Fortune Blitz Client</title>
 <style>
-
-  .c {text-align:center;}
-
+    .c {
+      text-align:center;
+    }
+    
+    .w {
+      box-sizing:border-box;
+      width:100%;
+    }
+    
+    .b {
+      font-weight:700;
+    }
+    
+    .columnName {
+      width:15%;
+    }
+    
+    .columnValue {
+      width:25%;
+    }
+    
+    #theTable {
+      border:1px outset #000;
+      margin:0 auto;
+      min-width:960px;
+      width:60%;
+    }
+    
+    .bordered {
+      border:1px inset grey;
+      padding:3px;
+    }
 </style>
 
 <script> 
-
+  let globalState = {};
 </script>
 </head>
 <body>
-    
-    Hello, Divine Fortune Blitz!
+  
+<table id="theTable">
+  <tr>
+    <th class="columnName">Network</th>
+    <td class="columnValue"><input type="text" id="network" placeholder="***-api.casinomodule.com" class="w"></td>
+    <td rowspan="8" id="spinsLog" class="bordered">No spins yet...</td>
+  </tr>
+  <tr>
+    <th>Token</th>
+    <td><input type="text" id="token" placeholder="1560799081404-1040034-JDA2Q6ITFYXRJ" class="w"></td>
+  </tr>
+  <tr>
+    <th>Play speed</th>
+    <td>
+      <select id="playSpeed" class="w">
+        <option value="1">Normal, human-like</option>
+        <option value="0.7">A little bit faster</option>
+        <option value="0.3">Really fast</option>
+        <option value="0.01">As fast, as possible</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <th><label for="freespins">Stop on freespins</label></th>
+    <td class="c"><input type="checkbox" id="freespins"></td>
+  </tr>
+  <tr>
+    <th><label for="bonus">Stop on bonus</label></th>
+    <td class="c"><input type="checkbox" id="bonus"></td>
+  </tr>
+  <tr>
+    <th>Stop on win</th>
+    <td><input type="number" id="bigWin" class="w" min="2" max="1000" value="100" step="5"></td>
+  </tr>
+  <tr>
+    <th>Bet size</th>
+    <td><input type="number" id="bet" placeholder="1.20" class="w" min="0.2" max="10000" step="0.2" value="0.2"></td>
+  </tr>
+  <tr>
+    <th>Play currency</th>
+    <td><input type="text" id="currencySymbol" value="€" class="w" ></td>
+  </tr>
+  <tr>
+    <td>
+      <input type="button" id="resetButton" onClick="javascript:resetStats();" value="Reset stats" class="w">
+    </td>
+    <td>
+      <input type="button" id="startButton" onClick="javascript:startStopPlay();" value="Start play" class="w b">
+    </td>
+    <td id="statsPlace" class="bordered">Start play, to see stats</td>
+  </tr>
+</table>
     
 <script>
-function sendGetRequest(url, params, callback){
+
+function resetStats() {
+  globalState['stats'] = {
+    'balance': 0, // Cents won
+    'turnover': 0, // Cents wagered
+    'flatBalance': 0, // units won
+    'spins': 0, // units wagered (100 units per spin)
+    'time': 0, // Total time in ms between spin start and finish, summed up for all spins
+    'realTime': 0, // Total time in ms between session start and stop, 
+    'lastStart': false // Time, when session was started
+  };
+}
+resetStats(); // Initialize stats
+
+function renderStats() {
+  let currencySymbol = document.getElementById('currencySymbol').value;
+  let htmlString = "";
+
+  if (globalState['stats']['lastStart'] === false) {
+    htmlString += 'Session paused';
+  } else {
+    htmlString += 'Playing for ' + ((Date.now - globalState['stats']['lastStart']) / 60 / 1000).toFixed(1) + ' minutes';
+  }
+
+  if (globalState['stats']['spins'] > 0) {
+    htmlString += ', balance <b>' + (globalState['stats']['balance'] / 100).toFixed(2) + currencySymbol + '</b> / ' + (globalState['stats']['turnover'] / 100).toFixed(2) + currencySymbol
+    htmlString += ' (' + (globalState['stats']['turnover'] === 0 ? 0 : 100 * globalState['stats']['balance'] / globalState['stats']['turnover']).toFixed(2) + '%)';
+    htmlString += ', played <b>' + globalState['stats']['spins'] + '</b> spins';
+    htmlString += ' (' + (globalState['stats']['spins'] === 0 ? 0 : 100 * globalState['stats']['flatBalance'] / globalState['stats']['spins'] / 100).toFixed(2) + '%)'; // "100 *" for converting share to percetns, "/ 100" because each spin makes 100 units turnover.
+  } else {
+    htmlString += ', no spins yet.'
+  }
+
+  if (globalState['stats']['realTime'] > 0) {
+    htmlString += ', speed <b>' + (1000 * 60 * 60 * globalState['stats']['spins'] / globalState['stats']['realTime']).toFixed(0) + '</b> spins / hour';
+  }
+  if (globalState['stats']['time'] > 0) {
+    htmlString += ', maximum speed is ' + (1000 * 60 * 60 * globalState['stats']['spins'] / globalState['stats']['time']).toFixed(0) + ' spins / hour';
+  }
+
+  document.getElementById('statsPlace').innerHTML = htmlString;
+
+}
+renderStats(); // Initial render
+
+function startStopPlay() {
+  let startStopButton = document.getElementById('startButton');
+  if (globalState['playing'] === true) { // We should stop play
+
+    globalState['playing'] = false;
+    startStopButton.value = "Start play";
+
+    globalState['stats']['realTime'] += Date.now() - globalState['stats']['lastStart'];
+    globalState['stats']['lastStart'] = false;
+
+  } else { // We should start play
+    globalState['playing'] = true;
+    startStopButton.value = "Stop play";
+
+    globalState['stats']['lastStart'] = Date.now();
+
+  }
+}
+
+function sendGetRequest(url, params, callback) {
   let xhr = new XMLHttpRequest();
   let urlParams = new URLSearchParams(params);
   xhr.open('get', url + '?' + urlParams.toString());
-  xhr.onload = function(){
-    if (this.status !== 200){
+  xhr.onload = function () {
+    if (this.status !== 200) {
       return callback(this.status + ': ' + this.responseText);
-    }
-    else {
+    } else {
       return callback(null, this.responseText);
     }
   };
